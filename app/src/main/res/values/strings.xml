@@ -1,0 +1,55 @@
+<resources>
+    <string name="app_name">JuegoReaccion</string>
+    <string name="app_title">Desafio de Reaccion y Atencion</string>
+    <string name="hint_player_name">Nombre del jugador</string>
+    <string name="label_mode">Dificultad</string>
+    <string name="label_iterations">Iteraciones</string>
+    <string name="label_max_reaction_time">Tiempo maximo de reaccion</string>
+    <string name="hint_iterations">Iteraciones (por defecto 20)</string>
+    <string name="hint_max_time">Tiempo maximo por reaccion (segundos, max 30)</string>
+    <string name="label_inverse_mode">Activar modo reaccion inversa</string>
+    <string name="help_inverse_mode">Regla inversa: NO responder ante ROJO o numero primo.</string>
+    <string name="button_start_game">Comenzar partida</string>
+    <string name="button_view_history">Ver puntuaciones</string>
+    <string name="button_respond">Responder</string>
+    <string name="button_retry">Jugar nuevamente</string>
+    <string name="button_back_menu">Volver al menu</string>
+
+    <string name="error_player_required">Ingresa el nombre del jugador.</string>
+    <string name="error_numeric_values">Iteraciones y tiempo deben ser numericos.</string>
+    <string name="error_iterations">La cantidad de iteraciones debe ser mayor a cero.</string>
+    <string name="error_max_time">El tiempo maximo debe ser entre 1 y 30 segundos.</string>
+
+    <string name="status_prepare">Preparate...</string>
+    <string name="status_confirm_start_round">Toca RESPONDER para iniciar la ronda</string>
+    <string name="status_countdown">La ronda empieza en %1$d...</string>
+    <string name="status_get_ready">Atento...</string>
+    <string name="status_react_in_time">Tiempo para reaccionar: %1$d s</string>
+    <string name="status_correct_ms">Correcto. Tiempo: %1$d ms</string>
+    <string name="status_wrong_no_reaction">Incorrecto: no debias reaccionar.</string>
+    <string name="status_timeout">Incorrecto: se acabo el tiempo.</string>
+    <string name="status_correct_hold">Correcto: no reaccionaste.</string>
+    <string name="status_early_press_penalty">Incorrecto: reaccionaste antes de tiempo.</string>
+    <string name="instruction_normal_mode">Regla: responde a TODOS los estimulos.</string>
+    <string name="instruction_inverse_mode">Regla inversa: NO respondas a ROJO o numero primo.</string>
+
+    <string name="round_counter">Ronda %1$d / %2$d</string>
+    <string name="score_and_errors">Puntaje: %1$d | Errores: %2$d</string>
+    <string name="time_counter">Tiempo actual: %1$.1f s / Maximo: %2$.1f s</string>
+    <string name="final_reaction_time_ms">TIEMPO FINAL DE REACCION: %1$d ms</string>
+    <string name="final_reaction_time_none">TIEMPO FINAL DE REACCION: SIN RESPUESTA</string>
+
+    <string name="result_victory">Nivel superado</string>
+    <string name="result_defeat">Partida finalizada</string>
+    <string name="mode_inverse_enabled">Inversa activada</string>
+    <string name="mode_inverse_disabled">Inversa desactivada</string>
+    <string name="training_no_score">\nModo entrenamiento: el puntaje no cuenta para ranking.</string>
+    <string name="result_detail_text">Jugador: %1$s\nModo: %2$s (%3$s)\nRondas: %4$d/%5$d\nCorrectas: %6$d\nErrores: %7$d\nTimeouts: %8$d\nPromedio reaccion: %9$d ms\nMejor reaccion: %10$d ms\nPuntaje final: %11$d%12$s</string>
+    <string name="best_record_text">Mejor registro local -> Puntaje: %1$d | Promedio: %2$d ms</string>
+
+    <string name="history_title">Puntuaciones registradas</string>
+    <string name="history_row">%1$d) %2$s | %3$s | %4$s</string>
+    <string name="history_avg_ms">Promedio: %1$d ms</string>
+    <string name="history_avg_no_data">Promedio: sin datos</string>
+    <string name="history_empty">No hay puntuaciones registradas.</string>
+</resources>
