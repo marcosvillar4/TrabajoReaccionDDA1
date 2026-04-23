@@ -27,10 +27,15 @@ public class ResultActivity extends AppCompatActivity {
         config = (GameConfig) getIntent().getSerializableExtra(GameActivity.EXTRA_GAME_CONFIG);
         stats = (GameStats) getIntent().getSerializableExtra(GameActivity.EXTRA_GAME_STATS);
         boolean victory = getIntent().getBooleanExtra(GameActivity.EXTRA_VICTORY, false);
+        String ruleLabel = getIntent().getStringExtra(GameActivity.EXTRA_RULE_LABEL);
 
         if (config == null || stats == null) {
             finish();
             return;
+        }
+
+        if (ruleLabel == null) {
+            ruleLabel = "-";
         }
 
         TextView resultTitle = findViewById(R.id.textResultTitle);
@@ -40,11 +45,13 @@ public class ResultActivity extends AppCompatActivity {
         Button menuButton = findViewById(R.id.buttonBackMenu);
 
         resultTitle.setText(victory ? R.string.result_victory : R.string.result_defeat);
-        detailText.setText(buildDetailText());
+        detailText.setText(buildDetailText(ruleLabel));
 
         if (savedInstanceState == null) {
             new ScoreHistoryRepository(this).saveRecord(
                     config.getPlayerName(),
+                    stats.getScore(),
+                    stats.getCorrectPercentage(),
                     stats.getAverageReactionMs(),
                     buildModeLabel()
             );
@@ -84,7 +91,7 @@ public class ResultActivity extends AppCompatActivity {
         });
     }
 
-    private String buildDetailText() {
+    private String buildDetailText(String ruleLabel) {
         String trainingTag = config.getGameMode() == GameMode.ENTRENAMIENTO
                 ? getString(R.string.training_no_score)
                 : "";
@@ -92,6 +99,7 @@ public class ResultActivity extends AppCompatActivity {
         return getString(
                 R.string.result_detail_text,
                 config.getPlayerName(),
+                ruleLabel,
                 config.getGameMode().toString(),
                 config.isInverseMode() ? getString(R.string.mode_inverse_enabled) : getString(R.string.mode_inverse_disabled),
                 stats.getRoundsPlayed(),
@@ -99,6 +107,7 @@ public class ResultActivity extends AppCompatActivity {
                 stats.getCorrectResponses(),
                 stats.getWrongResponses(),
                 stats.getTimeouts(),
+                stats.getCorrectPercentage(),
                 stats.getAverageReactionMs(),
                 stats.getBestReactionMs(),
                 stats.getScore(),
@@ -114,6 +123,9 @@ public class ResultActivity extends AppCompatActivity {
         return modeName;
     }
 }
+
+
+
 
 
 

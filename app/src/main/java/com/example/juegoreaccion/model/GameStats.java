@@ -22,8 +22,7 @@ public class GameStats implements Serializable {
         }
 
         if (scoreEnabled) {
-            int bonus = Math.max(1, (int) ((30000 - Math.max(0, reactionMs)) / 1000));
-            score += 10 + bonus;
+            score += 1;
         }
     }
 
@@ -59,8 +58,14 @@ public class GameStats implements Serializable {
         return correctResponses == 0 ? 0 : totalReactionMs / correctResponses;
     }
 
+    public double getCorrectPercentage() {
+        return roundsPlayed == 0 ? 0d : (correctResponses * 100d) / roundsPlayed;
+    }
+
     public long getBestReactionMs() {
         return bestReactionMs == Long.MAX_VALUE ? 0 : bestReactionMs;
     }
 }
+
+
 

@@ -1,63 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:id="@+id/textRound"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold" />
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textScore"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp" />
+        <TextView
+            android:id="@+id/textRound"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/textInstruction"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:textStyle="italic" />
+        <TextView
+            android:id="@+id/textScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
 
-    <TextView
-        android:id="@+id/textStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/textRuleTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/textTimer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/textStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/textStimulus"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="..."
-        android:textColor="@android:color/white"
-        android:textSize="44sp"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/textTimer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/buttonRespond"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/button_respond" />
+        <TextView
+            android:id="@+id/textPrompt"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="@string/stimulus_placeholder"
+            android:textSize="48sp"
+            android:textStyle="bold" />
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="2"
+            android:baselineAligned="false"
+            style="?android:attr/buttonBarStyle">
 
+            <Button
+                android:id="@+id/buttonOption1"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/option_placeholder" />
 
+            <Button
+                android:id="@+id/buttonOption2"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/option_placeholder" />
+        </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="2"
+            android:baselineAligned="false"
+            style="?android:attr/buttonBarStyle">
+
+            <Button
+                android:id="@+id/buttonOption3"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/option_placeholder" />
+
+            <Button
+                android:id="@+id/buttonOption4"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/option_placeholder" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

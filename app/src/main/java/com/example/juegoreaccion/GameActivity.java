@@ -11,11 +11,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.juegoreaccion.logic.StimulusFactory;
+import com.example.juegoreaccion.logic.rules.GameRule;
+import com.example.juegoreaccion.logic.rules.RuleCatalog;
 import com.example.juegoreaccion.model.GameConfig;
 import com.example.juegoreaccion.model.GameMode;
 import com.example.juegoreaccion.model.GameStats;
-import com.example.juegoreaccion.model.Stimulus;
+import com.example.juegoreaccion.model.RoundQuestion;
 
 import java.util.Random;
 
@@ -24,43 +25,41 @@ public class GameActivity extends AppCompatActivity {
     public static final String EXTRA_GAME_CONFIG = "extra_game_config";
     public static final String EXTRA_GAME_STATS = "extra_game_stats";
     public static final String EXTRA_VICTORY = "extra_victory";
+    public static final String EXTRA_RULE_LABEL = "extra_rule_label";
 
     private static final int PRE_ROUND_COUNTDOWN_SECONDS = 3;
-    private static final int MIN_RANDOM_STIMULUS_DELAY_MS = 400;
     private static final int NEXT_ROUND_DELAY_MS = 900;
     private static final int TIMER_TICK_MS = 50;
     private static final int ONE_SECOND_MS = 1000;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final StimulusFactory stimulusFactory = new StimulusFactory();
     private final Random random = new Random();
 
     private TextView statusText;
-    private TextView stimulusText;
-    private TextView instructionText;
+    private TextView promptText;
+    private TextView ruleText;
     private TextView scoreText;
     private TextView roundText;
     private TextView timerText;
+    private final Button[] optionButtons = new Button[4];
 
     private GameConfig config;
     private GameStats stats;
+    private GameRule selectedRule;
+    private RoundQuestion currentQuestion;
 
     private int currentRound;
     private int currentErrors;
     private int streak;
     private boolean waitingResponse;
-    private long stimulusStartMs;
+    private long questionShownMs;
     private long roundStartMs;
     private long currentRoundLimitMs;
-    private Stimulus currentStimulus = Stimulus.neutral();
     private Runnable timeoutRunnable;
     private Runnable roundTimerRunnable;
     private Runnable countdownRunnable;
-    private Runnable showStimulusRunnable;
     private boolean roundTimerActive;
-    private boolean awaitingRoundConfirmation;
     private boolean countdownRunning;
-    private boolean waitingStimulusAppearance;
     private int countdownSecondsLeft;
     private int defaultTimerColor;
 
@@ -76,52 +75,35 @@ public class GameActivity extends AppCompatActivity {
         }
 
         stats = new GameStats();
+        selectedRule = RuleCatalog.randomRule(random);
 
         statusText = findViewById(R.id.textStatus);
-        stimulusText = findViewById(R.id.textStimulus);
-        instructionText = findViewById(R.id.textInstruction);
+        promptText = findViewById(R.id.textPrompt);
+        ruleText = findViewById(R.id.textRuleTitle);
         scoreText = findViewById(R.id.textScore);
         roundText = findViewById(R.id.textRound);
         timerText = findViewById(R.id.textTimer);
+        optionButtons[0] = findViewById(R.id.buttonOption1);
+        optionButtons[1] = findViewById(R.id.buttonOption2);
+        optionButtons[2] = findViewById(R.id.buttonOption3);
+        optionButtons[3] = findViewById(R.id.buttonOption4);
         defaultTimerColor = timerText.getCurrentTextColor();
-        Button respondButton = findViewById(R.id.buttonRespond);
 
-        respondButton.setOnClickListener(v -> onUserResponse());
+        for (int i = 0; i < optionButtons.length; i++) {
+            final int index = i;
+            optionButtons[i].setOnClickListener(v -> onOptionSelected(index));
+        }
 
+        ruleText.setText(getString(R.string.rule_selected, selectedRule.getLabel()));
+        setAnswerButtonsEnabled(false);
         updateHeader();
-        nextRound();
+        startInitialCountdown();
     }
 
-    private void nextRound() {
-        if (currentRound >= config.getIterations()) {
-            finishGame(true);
-            return;
-        }
-
-        if (currentErrors >= config.getGameMode().allowedErrors()) {
-            finishGame(false);
-            return;
-        }
-
-        currentRound++;
-        waitingResponse = false;
-        awaitingRoundConfirmation = true;
-        countdownRunning = false;
-        waitingStimulusAppearance = false;
-        currentRoundLimitMs = calculateRoundLimitMs();
-        timerText.setTextColor(defaultTimerColor);
-        currentStimulus = Stimulus.neutral();
-        stimulusText.setText(currentStimulus.getValue());
-        stimulusText.setTextColor(Color.WHITE);
-        instructionText.setText(buildInstructionText());
-        statusText.setText(R.string.status_confirm_start_round);
-        updateTimeCounter(0, currentRoundLimitMs);
-        roundText.setText(getString(R.string.round_counter, currentRound, config.getIterations()));
-    }
-
-    private void startPreRoundCountdown() {
+    private void startInitialCountdown() {
         countdownRunning = true;
         countdownSecondsLeft = PRE_ROUND_COUNTDOWN_SECONDS;
+        statusText.setText(R.string.status_prepare);
 
         countdownRunnable = new Runnable() {
             @Override
@@ -139,31 +121,60 @@ public class GameActivity extends AppCompatActivity {
 
                 countdownRunning = false;
                 statusText.setText(R.string.status_get_ready);
-                roundStartMs = SystemClock.elapsedRealtime();
-                startRoundElapsedCounter();
-                waitingStimulusAppearance = true;
-                long randomDelayMs = nextStimulusDelayMs();
-                showStimulusRunnable = GameActivity.this::showStimulus;
-                handler.postDelayed(showStimulusRunnable, randomDelayMs);
+                startRound();
             }
         };
 
         handler.post(countdownRunnable);
     }
 
-    private void showStimulus() {
-        waitingStimulusAppearance = false;
-        currentStimulus = stimulusFactory.randomStimulus();
-        waitingResponse = true;
-        stimulusStartMs = SystemClock.elapsedRealtime();
+    private void startRound() {
+        if (currentRound >= config.getIterations()) {
+            finishGame(true);
+            return;
+        }
 
-        stimulusText.setText(currentStimulus.getValue());
-        stimulusText.setTextColor(currentStimulus.getColor());
-        instructionText.setText(buildInstructionText());
-        statusText.setText(getString(R.string.status_react_in_time, currentRoundLimitMs / ONE_SECOND_MS));
+        if (currentErrors >= config.getGameMode().allowedErrors()) {
+            finishGame(false);
+            return;
+        }
+
+        currentRound++;
+        waitingResponse = false;
+        setAnswerButtonsEnabled(false);
+        currentRoundLimitMs = calculateRoundLimitMs();
+        timerText.setTextColor(defaultTimerColor);
+
+        currentQuestion = selectedRule.createQuestion(random);
+        ruleText.setText(getString(R.string.rule_selected, currentQuestion.getRuleLabel()));
+        promptText.setText(currentQuestion.getPromptText());
+        promptText.setTextColor(currentQuestion.getPromptTextColor());
+        bindOptions(currentQuestion);
+
+        statusText.setText(R.string.status_select_answer);
+        updateTimeCounter(0, currentRoundLimitMs);
+        roundText.setText(getString(R.string.round_counter, currentRound, config.getIterations()));
+
+        roundStartMs = SystemClock.elapsedRealtime();
+        questionShownMs = roundStartMs;
+        waitingResponse = true;
+        setAnswerButtonsEnabled(true);
+        startRoundElapsedCounter();
 
         timeoutRunnable = this::onRoundTimeout;
         handler.postDelayed(timeoutRunnable, currentRoundLimitMs);
+    }
+
+    private void bindOptions(RoundQuestion question) {
+        for (int i = 0; i < optionButtons.length; i++) {
+            optionButtons[i].setText(question.getOptions().get(i));
+        }
+    }
+
+    private void setAnswerButtonsEnabled(boolean enabled) {
+        for (Button optionButton : optionButtons) {
+            optionButton.setEnabled(enabled);
+        }
     }
 
     private void startRoundElapsedCounter() {
@@ -194,29 +205,19 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    private void onUserResponse() {
-        if (awaitingRoundConfirmation) {
-            awaitingRoundConfirmation = false;
-            startPreRoundCountdown();
+    private void onOptionSelected(int selectedIndex) {
+        if (!waitingResponse || currentQuestion == null) {
             return;
         }
 
-        if (countdownRunning || waitingStimulusAppearance) {
-            registerEarlyPressPenalty();
-            return;
-        }
-
-        if (!waitingResponse) {
-            return;
-        }
+        long reactionMs = SystemClock.elapsedRealtime() - questionShownMs;
+        boolean correct = selectedIndex == currentQuestion.getCorrectOptionIndex();
 
         closeRoundTimers();
-
-        boolean shouldReact = currentStimulus.shouldReact(config.isInverseMode());
-        long reactionMs = SystemClock.elapsedRealtime() - stimulusStartMs;
         showFinalReactionTime(reactionMs, true);
+        setAnswerButtonsEnabled(false);
 
-        if (shouldReact) {
+        if (correct) {
             stats.registerCorrect(reactionMs, config.getGameMode() != GameMode.ENTRENAMIENTO);
             streak++;
             statusText.setText(getString(R.string.status_correct_ms, reactionMs));
@@ -224,20 +225,9 @@ public class GameActivity extends AppCompatActivity {
             stats.registerWrong(false);
             currentErrors++;
             streak = 0;
-            statusText.setText(R.string.status_wrong_no_reaction);
+            statusText.setText(getString(R.string.status_wrong_option, currentQuestion.getCorrectOption()));
         }
 
-        updateHeader();
-        scheduleNextRound();
-    }
-
-    private void registerEarlyPressPenalty() {
-        closeRoundTimers();
-        stats.registerWrong(false);
-        currentErrors++;
-        streak = 0;
-        statusText.setText(R.string.status_early_press_penalty);
-        showFinalReactionTime(0, false);
         updateHeader();
         scheduleNextRound();
     }
@@ -248,19 +238,13 @@ public class GameActivity extends AppCompatActivity {
         }
 
         closeRoundTimers();
-
-        boolean shouldReact = currentStimulus.shouldReact(config.isInverseMode());
+        setAnswerButtonsEnabled(false);
         showFinalReactionTime(0, false);
-        if (shouldReact) {
-            stats.registerWrong(true);
-            currentErrors++;
-            streak = 0;
-            statusText.setText(R.string.status_timeout);
-        } else {
-            stats.registerCorrect(-1, config.getGameMode() != GameMode.ENTRENAMIENTO);
-            streak++;
-            statusText.setText(R.string.status_correct_hold);
-        }
+
+        stats.registerWrong(true);
+        currentErrors++;
+        streak = 0;
+        statusText.setText(R.string.status_timeout);
 
         updateHeader();
         scheduleNextRound();
@@ -272,29 +256,12 @@ public class GameActivity extends AppCompatActivity {
             return base;
         }
 
-        // Dificultad dinamica opcional: cada 5 aciertos seguidos baja 1 segundo.
         long discount = (streak / 5) * ONE_SECOND_MS;
         return Math.max(2000L, base - discount);
     }
 
-    private String buildInstructionText() {
-        if (!config.isInverseMode()) {
-            return getString(R.string.instruction_normal_mode);
-        }
-        return getString(R.string.instruction_inverse_mode);
-    }
-
     private void scheduleNextRound() {
-        handler.postDelayed(this::nextRound, NEXT_ROUND_DELAY_MS);
-    }
-
-    private long nextStimulusDelayMs() {
-        long maxWindowMs = Math.max(MIN_RANDOM_STIMULUS_DELAY_MS, config.getMaxReactionSeconds() * ONE_SECOND_MS);
-        if (maxWindowMs == MIN_RANDOM_STIMULUS_DELAY_MS) {
-            return MIN_RANDOM_STIMULUS_DELAY_MS;
-        }
-        int randomPart = random.nextInt((int) (maxWindowMs - MIN_RANDOM_STIMULUS_DELAY_MS + 1));
-        return MIN_RANDOM_STIMULUS_DELAY_MS + randomPart;
+        handler.postDelayed(this::startRound, NEXT_ROUND_DELAY_MS);
     }
 
     private void updateTimeCounter(long elapsedMs, long maxMs) {
@@ -304,16 +271,11 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void closeRoundTimers() {
-        awaitingRoundConfirmation = false;
         countdownRunning = false;
-        waitingStimulusAppearance = false;
         waitingResponse = false;
         handler.removeCallbacks(timeoutRunnable);
         if (countdownRunnable != null) {
             handler.removeCallbacks(countdownRunnable);
-        }
-        if (showStimulusRunnable != null) {
-            handler.removeCallbacks(showStimulusRunnable);
         }
         stopRoundElapsedCounter();
     }
@@ -336,6 +298,7 @@ public class GameActivity extends AppCompatActivity {
         intent.putExtra(EXTRA_GAME_CONFIG, config);
         intent.putExtra(EXTRA_GAME_STATS, stats);
         intent.putExtra(EXTRA_VICTORY, victory);
+        intent.putExtra(EXTRA_RULE_LABEL, selectedRule.getLabel());
         startActivity(intent);
         finish();
     }
@@ -346,12 +309,3 @@ public class GameActivity extends AppCompatActivity {
         handler.removeCallbacksAndMessages(null);
     }
 }
-
-
-
-
-
-
-
-
-
