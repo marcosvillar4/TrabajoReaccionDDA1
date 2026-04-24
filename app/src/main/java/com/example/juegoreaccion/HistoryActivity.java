@@ -28,11 +28,13 @@ public class HistoryActivity extends AppCompatActivity {
         title.setText(R.string.history_title);
 
         ScoreHistoryRepository repository = new ScoreHistoryRepository(this);
-        List<ScoreHistoryRecord> records = repository.getRecordsSortedByAverage();
+        List<ScoreHistoryRecord> records = repository.getRecordsSortedByScoreThenReaction();
 
         List<String> rows = new ArrayList<>();
         for (int i = 0; i < records.size(); i++) {
             ScoreHistoryRecord record = records.get(i);
+            String scoreText = getString(R.string.history_score, record.getScore());
+            String accuracyText = getString(R.string.history_accuracy_percent, record.getCorrectPercentage());
             String averageText = record.getAverageReactionMs() > 0
                     ? getString(R.string.history_avg_ms, record.getAverageReactionMs())
                     : getString(R.string.history_avg_no_data);
@@ -42,6 +44,8 @@ public class HistoryActivity extends AppCompatActivity {
                     i + 1,
                     record.getPlayerName(),
                     record.getModeLabel(),
+                    scoreText,
+                    accuracyText,
                     averageText
             );
             rows.add(line);
@@ -61,5 +65,3 @@ public class HistoryActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
     }
 }
-
-

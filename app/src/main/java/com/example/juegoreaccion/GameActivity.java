@@ -1,6 +1,8 @@
 package com.example.juegoreaccion;
 
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.juegoreaccion.logic.GameAnswerEvaluator;
 import com.example.juegoreaccion.logic.rules.GameRule;
 import com.example.juegoreaccion.logic.rules.RuleCatalog;
 import com.example.juegoreaccion.model.GameConfig;
@@ -34,6 +37,7 @@ public class GameActivity extends AppCompatActivity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
+    private ToneGenerator toneGenerator;
 
     private TextView statusText;
     private TextView promptText;
@@ -88,6 +92,7 @@ public class GameActivity extends AppCompatActivity {
         optionButtons[2] = findViewById(R.id.buttonOption3);
         optionButtons[3] = findViewById(R.id.buttonOption4);
         defaultTimerColor = timerText.getCurrentTextColor();
+        toneGenerator = createToneGenerator();
 
         for (int i = 0; i < optionButtons.length; i++) {
             final int index = i;
@@ -211,7 +216,11 @@ public class GameActivity extends AppCompatActivity {
         }
 
         long reactionMs = SystemClock.elapsedRealtime() - questionShownMs;
-        boolean correct = selectedIndex == currentQuestion.getCorrectOptionIndex();
+        boolean correct = GameAnswerEvaluator.isCorrectSelection(
+                config.isInverseMode(),
+                selectedIndex,
+                currentQuestion.getCorrectOptionIndex()
+        );
 
         closeRoundTimers();
         showFinalReactionTime(reactionMs, true);
@@ -220,15 +229,28 @@ public class GameActivity extends AppCompatActivity {
         if (correct) {
             stats.registerCorrect(reactionMs, config.getGameMode() != GameMode.ENTRENAMIENTO);
             streak++;
-            statusText.setText(getString(R.string.status_correct_ms, reactionMs));
+            playCorrectSound();
+            statusText.setText(config.isInverseMode()
+                    ? getString(R.string.status_correct_inverse_ms, reactionMs)
+                    : getString(R.string.status_correct_ms, reactionMs));
         } else {
             stats.registerWrong(false);
             currentErrors++;
             streak = 0;
-            statusText.setText(getString(R.string.status_wrong_option, currentQuestion.getCorrectOption()));
+            playIncorrectSound();
+            if (config.isInverseMode()) {
+                statusText.setText(R.string.status_wrong_inverse);
+            } else {
+                statusText.setText(getString(R.string.status_wrong_option, currentQuestion.getCorrectOption()));
+            }
         }
 
         updateHeader();
+        if (shouldFinishGame()) {
+            finishGame(currentErrors < config.getGameMode().allowedErrors());
+            return;
+        }
+
         scheduleNextRound();
     }
 
@@ -244,19 +266,25 @@ public class GameActivity extends AppCompatActivity {
         stats.registerWrong(true);
         currentErrors++;
         streak = 0;
+        playIncorrectSound();
         statusText.setText(R.string.status_timeout);
 
         updateHeader();
+        if (shouldFinishGame()) {
+            finishGame(false);
+            return;
+        }
+
         scheduleNextRound();
     }
 
     private long calculateRoundLimitMs() {
-        long base = config.getMaxReactionSeconds() * ONE_SECOND_MS;
+        long base = (long) config.getMaxReactionSeconds() * ONE_SECOND_MS;
         if (config.getGameMode() == GameMode.ENTRENAMIENTO) {
             return base;
         }
 
-        long discount = (streak / 5) * ONE_SECOND_MS;
+        long discount = (long) (streak / 5) * ONE_SECOND_MS;
         return Math.max(2000L, base - discount);
     }
 
@@ -294,6 +322,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void finishGame(boolean victory) {
+        closeRoundTimers();
         Intent intent = new Intent(this, ResultActivity.class);
         intent.putExtra(EXTRA_GAME_CONFIG, config);
         intent.putExtra(EXTRA_GAME_STATS, stats);
@@ -303,9 +332,41 @@ public class GameActivity extends AppCompatActivity {
         finish();
     }
 
+    private boolean shouldFinishGame() {
+        return currentErrors >= config.getGameMode().allowedErrors() || currentRound >= config.getIterations();
+    }
+
+    private ToneGenerator createToneGenerator() {
+        try {
+            return new ToneGenerator(AudioManager.STREAM_MUSIC, 90);
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    private void playCorrectSound() {
+        if (toneGenerator != null) {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 140);
+        }
+    }
+
+    private void playIncorrectSound() {
+        if (toneGenerator != null) {
+            toneGenerator.startTone(ToneGenerator.TONE_PROP_NACK, 160);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
         handler.removeCallbacksAndMessages(null);
     }
 }
+
+
+
+

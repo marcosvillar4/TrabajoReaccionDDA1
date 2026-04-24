@@ -14,7 +14,7 @@
     <string name="button_respond">Responder</string>
     <string name="button_retry">Jugar nuevamente</string>
     <string name="button_back_menu">Volver al menu</string>
-    <string name="stimulus_placeholder">...</string>
+    <string name="stimulus_placeholder">…</string>
     <string name="option_placeholder">-</string>
 
     <string name="error_player_required">Ingresa el nombre del jugador.</string>
@@ -22,14 +22,16 @@
     <string name="error_iterations">La cantidad de iteraciones debe ser mayor a cero.</string>
     <string name="error_max_time">El tiempo maximo debe ser entre 1 y 30 segundos.</string>
 
-    <string name="status_prepare">Preparate...</string>
+    <string name="status_prepare">Preparate…</string>
     <string name="status_select_answer">Selecciona la respuesta correcta</string>
     <string name="status_confirm_start_round">Toca RESPONDER para iniciar la ronda</string>
-    <string name="status_countdown">La ronda empieza en %1$d...</string>
-    <string name="status_get_ready">Atento...</string>
+    <string name="status_countdown">La ronda empieza en %1$d…</string>
+    <string name="status_get_ready">Atento…</string>
     <string name="status_react_in_time">Tiempo para reaccionar: %1$d s</string>
     <string name="status_correct_ms">Correcto. Tiempo: %1$d ms</string>
+    <string name="status_correct_inverse_ms">Correcto (modo inverso). Tiempo: %1$d ms</string>
     <string name="status_wrong_option">Incorrecto: la respuesta correcta era %1$s.</string>
+    <string name="status_wrong_inverse">Incorrecto: en modo inverso debias elegir una opcion distinta.</string>
     <string name="status_wrong_no_reaction">Incorrecto: no debias reaccionar.</string>
     <string name="status_timeout">Incorrecto: se acabo el tiempo.</string>
     <string name="status_correct_hold">Correcto: no reaccionaste.</string>
@@ -49,11 +51,13 @@
     <string name="mode_inverse_enabled">Inversa activada</string>
     <string name="mode_inverse_disabled">Inversa desactivada</string>
     <string name="training_no_score">\nModo entrenamiento: el puntaje no cuenta para ranking.</string>
-    <string name="result_detail_text">Jugador: %1$s\nRegla: %2$s\nModo: %3$s (%4$s)\nRondas: %5$d/%6$d\nCorrectas: %7$d\nErrores: %8$d\nTimeouts: %9$d\nPromedio reaccion: %10$d ms\nMejor reaccion: %11$d ms\nPuntaje final: %12$d%13$s</string>
+    <string name="result_detail_text">Jugador: %1$s\nRegla: %2$s\nModo: %3$s (%4$s)\nRondas: %5$d/%6$d\nCorrectas: %7$d\nErrores: %8$d\nTimeouts: %9$d\nPorcentaje aciertos: %10$.1f%%\nPromedio reaccion: %11$d ms\nMejor reaccion: %12$d ms\nPuntaje final: %13$d%14$s</string>
     <string name="best_record_text">Mejor registro local -> Puntaje: %1$d | Promedio: %2$d ms</string>
 
     <string name="history_title">Puntuaciones registradas</string>
-    <string name="history_row">%1$d) %2$s | %3$s | %4$s</string>
+    <string name="history_row">%1$d) %2$s | %3$s | %4$s | %5$s | %6$s</string>
+    <string name="history_score">Puntaje: %1$d</string>
+    <string name="history_accuracy_percent">Acierto: %1$.1f%%</string>
     <string name="history_avg_ms">Promedio: %1$d ms</string>
     <string name="history_avg_no_data">Promedio: sin datos</string>
     <string name="history_empty">No hay puntuaciones registradas.</string>

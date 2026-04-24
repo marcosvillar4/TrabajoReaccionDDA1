@@ -18,6 +18,8 @@ public class ScoreHistoryRepository {
     private static final String KEY_RECORDS = "records_json";
 
     private static final String FIELD_PLAYER = "player";
+    private static final String FIELD_SCORE = "score";
+    private static final String FIELD_CORRECT_PCT = "correct_pct";
     private static final String FIELD_AVG_MS = "avg_ms";
     private static final String FIELD_MODE = "mode";
     private static final String FIELD_TS = "ts";
@@ -28,12 +30,14 @@ public class ScoreHistoryRepository {
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
-    public void saveRecord(String playerName, long averageReactionMs, String modeLabel) {
+    public void saveRecord(String playerName, int score, double correctPercentage, long averageReactionMs, String modeLabel) {
         JSONArray current = readArray();
 
         JSONObject item = new JSONObject();
         try {
             item.put(FIELD_PLAYER, playerName);
+            item.put(FIELD_SCORE, score);
+            item.put(FIELD_CORRECT_PCT, correctPercentage);
             item.put(FIELD_AVG_MS, averageReactionMs);
             item.put(FIELD_MODE, modeLabel);
             item.put(FIELD_TS, System.currentTimeMillis());
@@ -43,7 +47,7 @@ public class ScoreHistoryRepository {
         }
     }
 
-    public List<ScoreHistoryRecord> getRecordsSortedByAverage() {
+    public List<ScoreHistoryRecord> getRecordsSortedByScoreThenReaction() {
         JSONArray source = readArray();
         List<ScoreHistoryRecord> records = new ArrayList<>();
 
@@ -54,26 +58,37 @@ public class ScoreHistoryRepository {
             }
 
             String player = item.optString(FIELD_PLAYER, "-");
+            int score = item.optInt(FIELD_SCORE, 0);
+            double correctPct = item.optDouble(FIELD_CORRECT_PCT, 0d);
             long avg = item.optLong(FIELD_AVG_MS, 0L);
             String mode = item.optString(FIELD_MODE, "-");
             long timestamp = item.optLong(FIELD_TS, 0L);
-            records.add(new ScoreHistoryRecord(player, avg, mode, timestamp));
+            records.add(new ScoreHistoryRecord(player, score, correctPct, avg, mode, timestamp));
         }
 
-        Collections.sort(records, new Comparator<ScoreHistoryRecord>() {
+        return sortRecords(records);
+    }
+
+    public static List<ScoreHistoryRecord> sortRecords(List<ScoreHistoryRecord> records) {
+        List<ScoreHistoryRecord> ordered = new ArrayList<>(records);
+        Collections.sort(ordered, new Comparator<ScoreHistoryRecord>() {
             @Override
             public int compare(ScoreHistoryRecord left, ScoreHistoryRecord right) {
+                int scoreComparison = Integer.compare(right.getScore(), left.getScore());
+                if (scoreComparison != 0) {
+                    return scoreComparison;
+                }
+
                 long leftAvg = left.getAverageReactionMs() <= 0 ? Long.MAX_VALUE : left.getAverageReactionMs();
                 long rightAvg = right.getAverageReactionMs() <= 0 ? Long.MAX_VALUE : right.getAverageReactionMs();
-
-                if (leftAvg == rightAvg) {
-                    return Long.compare(right.getTimestamp(), left.getTimestamp());
+                if (leftAvg != rightAvg) {
+                    return Long.compare(leftAvg, rightAvg);
                 }
-                return Long.compare(leftAvg, rightAvg);
+
+                return Long.compare(right.getTimestamp(), left.getTimestamp());
             }
         });
-
-        return records;
+        return ordered;
     }
 
     private JSONArray readArray() {
@@ -85,4 +100,3 @@ public class ScoreHistoryRepository {
         }
     }
 }
-
